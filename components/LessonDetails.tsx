@@ -105,7 +105,7 @@ export default function LessonDetails({ lessonId, onBack }: LessonDetailsProps) 
       >
         <AlertCircle className="w-12 h-12 text-red-500" />
         <h3 className="text-2xl font-semibold text-red-600">Lesson Not Found</h3>
-        <p className="text-gray-600">The lesson you're looking for doesn't exist.</p>
+        <p className="text-gray-600">The lesson you are looking for does nott exist.</p>
         <motion.button
           onClick={onBack}
           className="px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"

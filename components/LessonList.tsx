@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Book, Loader2, GraduationCap, Clock, Star, ChevronRight } from 'lucide-react'
 
 interface Lesson {
@@ -175,7 +175,7 @@ export default function LessonList({ onSelectLesson }: LessonListProps) {
           initial="hidden"
           animate="visible"
         >
-          {lessons.map((lesson, index) => (
+          {lessons.map((lesson) => (
             <motion.li 
               key={lesson.id}
               variants={itemVariants}

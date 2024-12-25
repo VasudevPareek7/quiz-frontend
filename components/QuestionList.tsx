@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, X, Award } from 'lucide-react'
+import { Check, X, Award, Search } from 'lucide-react'
 
 interface Question {
   id: string | null
@@ -38,15 +38,15 @@ const questionVariants = {
   }
 }
 
-const optionLabels = ['A', 'B', 'C', 'D']
+const optionLabels = ['A', 'B', 'C', 'D'] as const
 
-export default function QuestionList({ questions }: QuestionListProps) {
+export default function QuestionList({ questions }: QuestionListProps): JSX.Element {
   const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null))
   const [showExplanations, setShowExplanations] = useState<boolean[]>(new Array(questions.length).fill(false))
-  const [score, setScore] = useState(0)
+  const [score, setScore] = useState<number>(0)
   const [celebratingQuestions, setCelebratingQuestions] = useState<boolean[]>(new Array(questions.length).fill(false))
 
-  const handleAnswerSelect = (questionIndex: number, optionIndex: number) => {
+  const handleAnswerSelect = (questionIndex: number, optionIndex: number): void => {
     if (answers[questionIndex] !== null) return
 
     const newAnswers = [...answers]
@@ -63,11 +63,18 @@ export default function QuestionList({ questions }: QuestionListProps) {
       newCelebrating[questionIndex] = true
       setCelebratingQuestions(newCelebrating)
       setTimeout(() => {
-        const resetCelebrating = [...celebratingQuestions]
-        resetCelebrating[questionIndex] = false
-        setCelebratingQuestions(resetCelebrating)
+        setCelebratingQuestions(prev => {
+          const resetCelebrating = [...prev]
+          resetCelebrating[questionIndex] = false
+          return resetCelebrating
+        })
       }, 2000)
     }
+  }
+
+  const handlePerplexitySearch = (questionText: string): void => {
+    const searchQuery = encodeURIComponent(questionText)
+    window.open(`https://www.perplexity.ai/?q=${searchQuery}`, '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -77,13 +84,14 @@ export default function QuestionList({ questions }: QuestionListProps) {
       animate="visible"
       variants={containerVariants}
     >
+      {/* Header with score */}
       <motion.div 
         className="bg-white rounded-lg shadow p-4 sticky top-0 z-10 flex justify-between items-center"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <span className="text-sm font-medium text-gray-500">
-          {answers.filter(a => a !== null).length} of {questions.length} answered
+          {answers.filter((a): a is number => a !== null).length} of {questions.length} answered
         </span>
         <div className="flex items-center gap-2 text-sm font-medium text-indigo-600">
           <Award className="w-4 h-4" />
@@ -91,12 +99,14 @@ export default function QuestionList({ questions }: QuestionListProps) {
         </div>
       </motion.div>
 
+      {/* Question list */}
       {questions.map((question, questionIndex) => (
         <motion.div 
-          key={questionIndex}
+          key={question.id ?? questionIndex}
           className="bg-white rounded-lg shadow-xl p-6 relative overflow-hidden"
           variants={questionVariants}
         >
+          {/* Celebration animation */}
           {celebratingQuestions[questionIndex] && (
             <motion.div 
               className="absolute inset-0 pointer-events-none"
@@ -105,7 +115,7 @@ export default function QuestionList({ questions }: QuestionListProps) {
               transition={{ duration: 2 }}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20" />
-              {[...Array(20)].map((_, i) => (
+              {Array.from({ length: 20 }).map((_, i) => (
                 <motion.div
                   key={i}
                   className="absolute w-2 h-2 rounded-full bg-yellow-400"
@@ -115,8 +125,8 @@ export default function QuestionList({ questions }: QuestionListProps) {
                     scale: 0
                   }}
                   animate={{ 
-                    top: Math.random() * 100 + "%",
-                    left: Math.random() * 100 + "%",
+                    top: `${Math.random() * 100}%`,
+                    left: `${Math.random() * 100}%`,
                     scale: [0, 1, 0],
                     y: [-20, 20],
                     x: [-20, 20]
@@ -131,10 +141,23 @@ export default function QuestionList({ questions }: QuestionListProps) {
             </motion.div>
           )}
 
-          <h3 className="text-xl font-semibold mb-6 text-gray-800">
-            {questionIndex + 1}. {question.text}
-          </h3>
+          {/* Question header with Perplexity search */}
+          <div className="flex justify-between items-start gap-4 mb-6">
+            <h3 className="text-xl font-semibold text-gray-800">
+              {questionIndex + 1}. {question.text}
+            </h3>
+            <button
+              onClick={() => handlePerplexitySearch(question.text)}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+              type="button"
+              aria-label="Search on Perplexity"
+            >
+              <Search className="w-4 h-4" />
+              <span>Search this topic on Perplexity AI</span>
+            </button>
+          </div>
 
+          {/* Options list */}
           <ul className="space-y-3">
             {question.options.map((option, optionIndex) => (
               <motion.li 
@@ -146,6 +169,7 @@ export default function QuestionList({ questions }: QuestionListProps) {
                 <motion.button
                   onClick={() => handleAnswerSelect(questionIndex, optionIndex)}
                   disabled={answers[questionIndex] !== null}
+                  type="button"
                   className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-300 flex items-center justify-between group ${
                     answers[questionIndex] === optionIndex
                       ? optionIndex === question.correctOptionIndex
@@ -183,6 +207,7 @@ export default function QuestionList({ questions }: QuestionListProps) {
             ))}
           </ul>
 
+          {/* Explanation */}
           <AnimatePresence>
             {showExplanations[questionIndex] && (
               <motion.div 

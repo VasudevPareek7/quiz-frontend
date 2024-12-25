@@ -14,6 +14,9 @@ interface LessonListProps {
   onSelectLesson: (lessonId: string) => void
 }
 
+const CACHE_KEY = 'lesson_cache';
+const CACHE_DURATION = 1000 * 60 * 60; // Cache duration: 1 hour
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -52,17 +55,32 @@ export default function LessonList({ onSelectLesson }: LessonListProps) {
   useEffect(() => {
     async function fetchLessons() {
       try {
-        const response = await fetch('https://quiz-app-1072083660725.us-central1.run.app/api/v1/lessons/subject/History')
-        const data = await response.json()
-        setLessons(data)
-        setLoading(false)
+        // Check cache
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (cachedData) {
+          const { timestamp, lessons } = JSON.parse(cachedData);
+          if (Date.now() - timestamp < CACHE_DURATION) {
+            setLessons(lessons);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Fetch data from API
+        const response = await fetch('https://quiz-app-1072083660725.us-central1.run.app/api/v1/lessons/subject/History');
+        const data = await response.json();
+
+        // Update state and cache
+        setLessons(data);
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), lessons: data }));
+        setLoading(false);
       } catch (error) {
-        console.error('Error fetching lessons:', error)
-        setLoading(false)
+        console.error('Error fetching lessons:', error);
+        setLoading(false);
       }
     }
 
-    fetchLessons()
+    fetchLessons();
   }, [])
 
   if (loading) {

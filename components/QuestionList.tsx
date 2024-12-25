@@ -38,6 +38,8 @@ const questionVariants = {
   }
 }
 
+const optionLabels = ['A', 'B', 'C', 'D']
+
 export default function QuestionList({ questions }: QuestionListProps) {
   const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null))
   const [showExplanations, setShowExplanations] = useState<boolean[]>(new Array(questions.length).fill(false))
@@ -149,13 +151,21 @@ export default function QuestionList({ questions }: QuestionListProps) {
                       ? optionIndex === question.correctOptionIndex
                         ? 'bg-green-100 text-green-800 border-2 border-green-500'
                         : 'bg-red-100 text-red-800 border-2 border-red-500'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border-2 border-transparent hover:border-indigo-300'
-                  } ${answers[questionIndex] !== null && optionIndex !== answers[questionIndex] ? 'opacity-50' : ''}`}
+                      : answers[questionIndex] !== null && optionIndex === question.correctOptionIndex
+                        ? 'bg-green-50 text-green-800 border-2 border-green-300'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-800 border-2 border-transparent hover:border-indigo-300'
+                  } ${answers[questionIndex] !== null && optionIndex !== answers[questionIndex] && optionIndex !== question.correctOptionIndex ? 'opacity-50' : ''}`}
                   whileHover={{ scale: answers[questionIndex] === null ? 1.02 : 1 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span>{option}</span>
-                  {answers[questionIndex] === optionIndex && (
+                  <span className="flex items-center gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium">
+                      {optionLabels[optionIndex]}
+                    </span>
+                    <span>{option}</span>
+                  </span>
+                  {(answers[questionIndex] === optionIndex || 
+                    (answers[questionIndex] !== null && optionIndex === question.correctOptionIndex)) && (
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
